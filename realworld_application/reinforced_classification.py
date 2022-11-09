@@ -340,80 +340,6 @@ def testing(classifier, datasets, result_path):
         weight_viz(w2, join(result_path, 'w2.png'))
         utils.write_protes(global_pathways, join(result_path, 'pathways.txt'))
 
-def test_on_BCLC_C():
-    test_path = join(
-        args.data_path,
-        r'reinforced_classification',
-        r'reinforce_datasets122_simple_lsu004_lmvi003_regu1e-4_drop08_os1_dfs1\results841\validation'
-    )
-
-    gene2prote_dict, prote2gene_dict = utils.gene2prote_and_prote2gene(
-        join(args.data_path, 'HCC-Proteomics-Annotation-20210226.xlsx')
-    )
-    datasets, intersected_protes = utils.load_data(
-        args, 
-        gene2prote_dict, 
-        prote2gene_dict,
-        load_feat_prote=args.load_feat_prote, 
-        log10=False, 
-        zscore=True, 
-        f1269=True, 
-        clip=60
-    )
-    # datasets, intersected_protes, gene2prote_dict, prote2gene_dict = pickle.load(
-    #     open(join(args.data_path, 'temp_files', 'all_feat.p'), 'rb')
-    # )
-    print('intersected protes num:', len(intersected_protes))
-
-    BCLC_data, patients, OS, status, DFS, recurrence = utils.load_BCLC_C_data(
-        args.data_path, intersected_protes, datasets, prote2gene_dict
-    )
-
-    models, optimizers = make_simple_models(
-        args.h_dim,
-        args.subtype_num, 
-        [args.learning_rate, args.baseline_learning_rate], 
-        args.regularization
-    ) if args.simple else make_models(
-        args.h_dim, 
-        args.subtype_num, 
-        [args.learning_rate, args.baseline_learning_rate],
-        args.regularization,
-        args.use_bias
-    )
-    classifier, baseline = models
-    classifier.load_weights(join(test_path, 'ckpt'))
-    assignments = classifier.predict(BCLC_data.astype(np.float32))
-    utils.write_assignments(
-        join(
-            test_path, 
-            'test_Center123_BCLC_C_classification_result.csv'
-        ),
-        patients, 
-        assignments
-    )
-    title = 'Cetner123 BCLC C'
-    plot_survival_cruve(
-        OS, 
-        status, 
-        assignments, 
-        3, 
-        title=title + ' OS ', 
-        path=test_path, 
-        prefix='test_Center123_BCLC_C_OS_',
-        pop_viz=False
-    )
-    plot_survival_cruve(
-        DFS, 
-        recurrence, 
-        assignments, 
-        3, 
-        title=title + ' DFS ', 
-        path=test_path, 
-        prefix='test_Center123_BCLC_C_DFS_',
-        pop_viz=False
-    )
-
 def single_result_check(survival_info, test_path, km_viz=False):
     score = 0
     for label in ['Center1_0A', 'Center2_0A', 'Center3_0A','Center123_B','Center123_large',
@@ -570,17 +496,6 @@ if __name__ == '__main__':
     all_datasets = datasets_regroup(copy.deepcopy(splited_datasets), intersected_protes, '{:} {:}'.format(args.train_num, args.test_num))
     test_datasets = datasets_regroup(copy.deepcopy(splited_datasets), intersected_protes, '9 2 test')
 
-    if args.load_pseudo_label:
-        all_datasets = utils.load_pseudo_label(all_datasets, 
-        join(args.data_path,
-            'archive',
-            'reinforced_classification',
-            '20210330',
-            'reinforce_datasets122_simple_lsu004_lmvi003_regu1e-4_drop08_os1_dfs1',
-            'results841',
-            'validation'
-        )
-    )
     print('feat num:', len(intersected_protes))
 
     if not args.check:
