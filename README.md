@@ -15,4 +15,5 @@ conda install -c numba numba
 2. To reproduce the real-world application which transfers the original subtypes from Jiang et al.'s cohort to SH, GZ, FZ and Gao et al.'s cohorts, you need to download the data which will be available after the paper publication and run following script
 
 conda activate srps_env
+
 python realworld_application/reinforced_class.py --data_path=PATH_TO_DATA
