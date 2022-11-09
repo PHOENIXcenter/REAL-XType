@@ -1,6 +1,6 @@
 # REAL-XType
 
-This is the python and tensoarflow implimentation of the subtyping algorithm 'REAL-XType' proposed in the paper 'REAL: The Principle and Approach for Clinical Multicenter Proteomic Tumor Analysis'.
+This is the python and tensorflow implementation of the subtyping algorithm 'REAL-XType' proposed in the paper 'REAL: The Principle and Approach for Clinical Multicenter Proteomic Tumor Analysis'.
 
 Here are the instructions:
 
