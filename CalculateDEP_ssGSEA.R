@@ -5,13 +5,13 @@
 # v2: calculate DEP using S1/non-S1
 
 library("limma")
-library("plyr")
 library("dplyr")
 library("RSQLite")
 library("S4Vectors")
 library("GSVA")
-library("ComplexHeatmap")
-library("circlize")
+library("plyr")
+library(ComplexHeatmap)
+library(circlize)
 
 #calculate NA number
 f_NA_sum <- function(x) {
@@ -357,82 +357,88 @@ f_fake_GSEA_result <- function(save_dir){
   write.csv(df, file = paste0(save_dir, "_subtype_score.csv"))
 }
 
+# # save raw data
+# data_path <- file.path("D:", "Data", "SRPS", "HCC_data")
+# Jiang_data <- read.csv(
+#   file.path(data_path, "sub_data_quantile.csv"),
+#   sep = ",",
+#   header = TRUE,
+#   row.names = 1,
+#   encoding = "UTF-8"
+# )
+# SH_data <- read.csv(
+#   file.path(data_path, "temp1_quantile.csv"),
+#   sep = ",",
+#   header = TRUE,
+#   row.names = 1,
+#   encoding = "UTF-8"
+# )
+# GZ_data <- read.csv(
+#   file.path(data_path, "temp2_quantile.csv"),
+#   sep = ",",
+#   header = TRUE,
+#   row.names = 1,
+#   encoding = "UTF-8"
+# )
+# FZ_data <- read.csv(
+#   file.path(data_path, "temp3_quantile.csv"),
+#   sep = ",",
+#   header = TRUE,
+#   row.names = 1,
+#   encoding = "UTF-8"
+# )
+# Gao_data <- read.csv(
+#   file.path(data_path, "Fudan_Cell_HCC159_6478gene_nolog2.csv"),
+#   sep = ",",
+#   header = TRUE,
+#   row.names = 1,
+#   encoding = "UTF-8"
+# )
+# save(Jiang_data, SH_data, GZ_data, FZ_data, Gao_data, file=file.path(data_path, "HCC_raw_data.RData"))
+
 # set params
-root_path <- file.path("data")
-data_path <- file.path(root_path, "r_data")
-fold_num <- 5
-dataset_names <- c("Jiang", "Gao")
+root_path <- file.path("D:", "Data")
+data_path <- file.path(root_path, "Tumor_clinic")
+result_path <- file.path(data_path, "benchmark", "XType")
+cohorts <- c("SH", "GZ", "FZ", "Gao")
 
 # load raw data
 load(file.path(data_path, "HCC_raw_data.RData"))
 
 pro_matrix_list <- list()
-for (dataset_id in 1:length(dataset_names)){
-  pro_matrix_list[[dataset_id]] <- eval(as.name(paste0(dataset_names[dataset_id], "_data")))
+for (dataset_id in 1:length(cohorts)){
+  pro_matrix_list[[dataset_id]] <- eval(as.name(paste0(cohorts[dataset_id], "_data")))
 }
 
-# find all the result directories
-dirs <- c()
-for (fold in 1:fold_num){
-  dirs_fold <- list.dirs(
-    path=file.path(root_path, "Jiang2Gao", paste0("seed", fold-1)), 
-    full.names = TRUE, 
-    recursive = TRUE
-  )
-  dirs <- append(dirs, dirs_fold)
-}
-
-dir_lens <- c()
-for (i in 1:length(dirs)){
-  dir_lens[i] <- strtoi(length(split_path(dirs[i])))
-}
-leaf_dirs <- dirs[dir_lens==max(dir_lens)]
-
-# loop through all the leaf directories
-for (leaf_dir in leaf_dirs){
-  start_time <- Sys.time()
-
-  # load assignments
-  fold_results <- list()
-  print(leaf_dir)
-  for (fold in 1:fold_num){
-    fold_result <- read.csv(
-      file.path(leaf_dir, paste0("fold-", fold - 1, ".csv")),
+for (i in 1:6){
+  
+  for (j in 1:length(cohorts)){
+    start_time <- Sys.time()
+    curr_dir = file.path(result_path, paste0("test-", cohorts[j]), paste0("para-", as.character(i-1)), "seed-0")
+    # load assignments
+    results <- read.csv(
+      file.path(curr_dir, paste0(cohorts[j], ".csv")),
       sep = ",",
       header = TRUE,
       encoding = "UTF-8"
     )
-    fold_results[[fold]] <- fold_result
-  }
-  
-  # combine the result of all folds
-  results <- do.call(rbind, fold_results)
-
-  for (dataset_id in 1:length(dataset_names)){
+    
     # allocate results to each dataset
-    if (dataset_id == 1){
-      labels <- results[results[, "cohort"]==(dataset_id - 1), c("patients", "label")]
-    } else{
-      labels <- results[results[, "cohort"]==(dataset_id - 1), c("patients", "assignment")]
-    }
+    labels <- results[ , c("patients", "assignment")]
 
     colnames(labels) <- c("ID","Subtype")
     labels$Subtype <- mapvalues(labels$Subtype, 
                                 from=c(0,1,2), 
                                 to=c("S1","S2","S3"))
-
-    # label <- labels
-    # pro_matrix <- pro_matrix_list[[dataset_id]]
-    # output_dir <- file.path(leaf_dir, paste0("GSEA_", dataset_names[dataset_id]))
     res <- try(
       f_ssGSEA(
         label=labels, 
-        pro_matrix=pro_matrix_list[[dataset_id]], 
-        output_dir=file.path(leaf_dir, paste0("GSEA_", dataset_names[dataset_id]))
+        pro_matrix=pro_matrix_list[[j]], 
+        output_dir=file.path(curr_dir, paste0("GSEA_", cohorts[j]))
       )
     )
     if ('try-error' %in% class(res)) {
-      f_fake_GSEA_result(save_dir=file.path(leaf_dir, paste0("GSEA_", dataset_names[dataset_id])))
+      f_fake_GSEA_result(save_dir=file.path(curr_dir, paste0("GSEA_", cohorts[j])))
     } 
   }
   
