@@ -10,7 +10,7 @@ Here are the instructions:
 
 		conda activate xtype_env
 
-conda install -c conda-forge -c bioconda -c numba matplotlib lifelines matplotlib-venn harmonypy gseapy numba scikit-survival
+		conda install -c conda-forge -c bioconda -c numba matplotlib lifelines matplotlib-venn harmonypy gseapy numba scikit-survival
 
 
 2. To reproduce the real-world application which transfers the original subtypes from Jiang et al.'s cohort to SH, GZ, FZ and Gao et al.'s cohorts, you need to download the data which will be available after the paper publication and run following commands.
