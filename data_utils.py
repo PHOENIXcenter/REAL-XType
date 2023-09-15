@@ -398,5 +398,94 @@ def load_prog_consis_genes(file_path, top_k):
     protes = df['prote'].to_list()[:top_k]
     return protes
     
+def load_Ng_cohort(data_path, sample_group=1):
+    proteome_df = pd.read_excel(
+        join(
+            data_path,
+            'external_cohorts',
+            'NC-2022-Integrative proteogenomic characterization of hepatocellular carcinoma across etiologies and stages',
+            'PROT_HCC_SWATH_Spectronaut_Results.xlsx'
+        ),
+        index_col=0,
+        sheet_name='20190418_ED15_EXP2_CS_SWATH_all',
+        header=[0],
+        engine='openpyxl'
+    )
+    proteome_df = proteome_df.drop(index=('PG.ProteinAccessions'))
+    protes = list(proteome_df.index.values)
+    samples = list(proteome_df)
+
+    clinic_df = pd.read_excel(
+        join(data_path, 
+            'external_cohorts',
+            'NC-2022-Integrative proteogenomic characterization of hepatocellular carcinoma across etiologies and stages',
+            '41467_2022_29960_MOESM4_ESM.xlsx'
+        ),
+        sheet_name='Classification',
+        header=[0],
+        engine='openpyxl'
+    )
+    clinic_df = clinic_df[~pd.isna(clinic_df['tumor_biopsyID'])]
+    tumor_biopsy = clinic_df['tumor_biopsyID'].to_list()
+    tumor_samples = []
+    for biopsy in tumor_biopsy:
+        for sample in samples:
+            if biopsy in sample:
+               tumor_samples.append(sample)
+    patients_in_tumopr_samples = list(set([int(sample.split('_')[0]) for sample in tumor_samples]))
+    patients_in_tumopr_samples.sort()
+    patient_sample_dict = {}
+    for patient_id in patients_in_tumopr_samples:
+        patient_sample_dict[patient_id] = [sample for sample in tumor_samples if int(sample.split('_')[0]) == patient_id]
+
+    selected_samples = [patient_sample_dict[patient][sample_group] for patient in patients_in_tumopr_samples]
+    data_df = proteome_df[selected_samples]
+    data_df.columns = patients_in_tumopr_samples
+
+    # filter protes
+    selected_protes = read_protein_list(join(data_path, 'selected_protes.txt'))
+    sub_data_df = pd.DataFrame(columns=data_df.columns, index=[])
+    for selected_prote in selected_protes:
+        row = pd.DataFrame(columns=data_df.columns, index=[selected_prote])
+        for prote in protes:
+            if selected_prote in prote:
+                row = data_df[data_df.index==prote]
+                break
+        sub_data_df = sub_data_df.append(row)   
+    sub_data_df = sub_data_df.T
+    protes = selected_protes
+    data = sub_data_df.to_numpy(dtype=np.float32, copy=True, na_value=np.nan)
+    data[~np.isnan(data)] = np.log2(data[~np.isnan(data)]) 
+    data = stats.zscore(data, axis=0, nan_policy='omit')
+    data[np.isnan(data)] = np.nanmin(data)
+    patients = patients_in_tumopr_samples
+
+    # clinical info
+    selected_samples = [sample.split('_')[1] for sample in selected_samples]
+    clinic_info = clinic_df[clinic_df['tumor_biopsyID'].isin(selected_samples)][[
+        'Patient_ID', 'bclc', 'days_of_survival', 'days_to_censoring', 'macro_vascular_invasion', 'age_at_biopsy', 'edmondson'
+    ]]
+    OS = clinic_info[['days_of_survival', 'days_to_censoring']].max(axis=1).to_numpy(dtype=np.int32)
+    OS = (OS * 120 / 365).astype(int) / 10.
+    OS[OS == 0.] = 0.1
+    status = clinic_info['days_to_censoring'].isna().to_numpy(dtype=np.int32)
+    bclc = clinic_info['bclc'].replace({'0': 0, 'A': 1, 'B': 2, 'C': 3, 'D': 4}).to_numpy()
+    mvi = clinic_info['macro_vascular_invasion'].replace({'no': 0, 'yes': 1}).to_numpy()
+    age = clinic_info['age_at_biopsy'].to_numpy()
+    diff = clinic_info['edmondson'].to_numpy()
+    dataset={
+        'data': data,
+        'protes': protes,
+        'patients': patients,
+        'OS': OS,
+        'status': status,
+        'bclc': bclc,
+        'mvi': mvi,
+        'diff': diff,
+        'age': age,
+        'cohort': 'Ng'
+    }
+    return dataset
+
 if __name__ == '__main__':
     pass

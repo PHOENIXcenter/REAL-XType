@@ -6,15 +6,19 @@ Here are the instructions:
 
 1. Create an anaconda environment with anaconda installed on you desktop/server, note that we recommand to test on a ubuntu system for the best reproducibility.
 
-conda create -n xtype_env python=3.7 tensorflow-gpu=2.2 numpy scikit-learn scipy pandas progressbar2 statsmodels
+		conda create -n xtype_env python=3.7 tensorflow-gpu=2.2 numpy scikit-learn scipy pandas progressbar2 statsmodels
 
-conda activate xtype_env
+		conda activate xtype_env
 
-conda install -c conda-forge -c bioconda -c numba matplotlib lifelines matplotlib-venn harmonypy gseapy numba
+conda install -c conda-forge -c bioconda -c numba matplotlib lifelines matplotlib-venn harmonypy gseapy numba scikit-survival
 
 
 2. To reproduce the real-world application which transfers the original subtypes from Jiang et al.'s cohort to SH, GZ, FZ and Gao et al.'s cohorts, you need to download the data which will be available after the paper publication and run following commands.
 
-conda activate xtype_env
+		conda activate xtype_env
 
-bash cmd.sh
+		bash cmd.sh
+
+3. To simply run a demo that can test the ensembled model to test on an external validation cohort e.g., Ng et al.'s cohort, please run following command.
+
+		python Demo_on_Ng_cohort.py

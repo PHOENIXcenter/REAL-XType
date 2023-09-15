@@ -195,7 +195,7 @@ def real_xtype(datasets, datasets_train, datasets_valid, datasets_test):
 
 def evaluation(km_viz=False):
     param_list_df = pd.read_csv(join(experiment_path, 'param_list.csv'), index_col=0)
-    param_dfs = {'SH':[], 'GZ':[], 'FZ':[]}
+    param_dfs = {'SH':[], 'GZ':[], 'FZ':[], 'Gao':[]}
     cohorts_df = []
     # save results for all params
     for test_cohort in param_dfs.keys():
@@ -215,19 +215,21 @@ def evaluation(km_viz=False):
             param_dfs[test_cohort].append(param_df)
 
         results_df = pd.concat(param_dfs[test_cohort])
+        results_df = results_df.sort_index()
         sub_resultsdf = results_df[[col for col in list(results_df) if 'train_' not in col]]
         params_results_df = pd.merge(param_list_df, sub_resultsdf, left_index=True, right_index=True)
         params_results_df.to_csv(join(experiment_path, 'test-'+test_cohort, 'results_{:}.csv'.format(test_cohort)))
 
         # get the predicted results from the best validated model
         best_id = results_df['avg_Valid_dRMST'].argmax()
+        print(test_cohort, 'best id:', best_id)
         curr_path = join(experiment_path, 'test-'+test_cohort, 'para-'+str(best_id), 'seed-'+str(args.seed), test_cohort+'.csv')
         df = pd.read_csv(curr_path)
         cohorts = [test_cohort] * len(df.index.values)
         df.insert(len(list(df)) - 2, 'cohort', cohorts)
         cohorts_df.append(df)
     cohorts_df = pd.concat(cohorts_df)
-    cohorts_df.to_csv(join(experiment_path, 'SH_GZ_FZ.csv'))
+    cohorts_df.to_csv(join(experiment_path, 'SH_GZ_FZ_Gao.csv'))
 
     # visualize results
     cohorts = ['SH_GZ_FZ', 'SH', 'GZ', 'FZ']
@@ -236,7 +238,7 @@ def evaluation(km_viz=False):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     for cohort in cohorts:
-        cohort_df = cohorts_df if cohort == 'SH_GZ_FZ' else cohorts_df[cohorts_df['cohort']==cohort]
+        cohort_df = cohorts_df[cohorts_df['cohort']!='Gao'] if cohort == 'SH_GZ_FZ' else cohorts_df[cohorts_df['cohort']==cohort]
         for group in groups:
             if group == 'All':
                 group_df = cohort_df
@@ -341,6 +343,65 @@ def evaluate_a_result(experiment_path, test_cohort, param_id, seed, km_viz=False
     results_df = pd.DataFrame(data=results_dict, index=[param_id])
     results_df.to_csv(join(curr_path, 'results.csv'))
 
+def external_validation(datasets):
+    from sklearn.ensemble import RandomForestClassifier
+    assignments_list = []
+    assignments_RF_list = []
+    if not os.path.exists(join(experiment_path, 'viz_results')):
+        os.makedirs(join(experiment_path, 'viz_results'))
+    for sample_group in [0, 1, 2]:
+        dataset = utils.load_Ng_cohort(args.data_path, sample_group)
+        classifier, _ = make_simple_models(
+            args.h_dim,
+            3, 
+            4,
+            args.lr,
+            args.regu,
+            args.activ,
+            args.bias
+        )
+        prob_list = []
+        # ensemble the best classifiers in 4 test cohorts by averaging the predicted probability
+        for dataset_id, (test_cohort, param_id) in enumerate([('SH', 0), ('GZ', 3), ('FZ', 1), ('Gao', 0)]):
+            result_path = join(experiment_path, 'test-'+test_cohort, 'para-'+str(param_id), 'seed-'+str(args.seed),)
+            classifier.load_weights(join(result_path, 'ckpt_fold')).expect_partial()
+            prob = classifier.prob(dataset['data'])
+            prob_list.append(prob)
+        mean_prob = np.mean(np.stack(prob_list, axis=2), axis=2) # patients * subtypes
+        prob = mean_prob / np.tile(np.sum(mean_prob, axis=1, keepdims=True), (1, 3))
+        assignments = np.argmax(prob, axis=1)
+        assignments_list.append(assignments)
+        dataset['assignments'] = assignments
+        fig, ax = plt.subplots(figsize=(4, 4))
+        plot_km_curve_custom(
+            dataset['OS'], 
+            dataset['status'], 
+            assignments, 
+            3,
+            ax, 
+            title='Ng_OS_REAL',
+            text_bias=30,
+            clip_time=60
+        )
+        fig.tight_layout()
+        plt.savefig(join(experiment_path, 'viz_results', 'km_Ng_OS_{:}.png'.format(sample_id)))
+        plt.close()
+
+    df_REAL = pd.DataFrame(data={
+            'patients': dataset['patients'],
+            'OS': dataset['OS'],
+            'status': dataset['status'],
+            'bclc': dataset['bclc'],
+            'mvi': dataset['mvi'],
+            'diff': dataset['diff'],
+            'age': dataset['age'],
+            'assignment_01': assignments_list[0],
+            'assignment_02': assignments_list[1],
+            'assignment_03': assignments_list[2]
+        }
+    )
+    df_REAL.to_csv(join(experiment_path, '{:}.csv'.format(dataset['cohort'])), index=False)
+
 if __name__ == '__main__':
     start_time = time.time()
 
@@ -362,38 +423,58 @@ if __name__ == '__main__':
     )
     
     if args.test_cohort == 'SH':
-        cohorts = 'Jiang_GZ_FZ_SH_Gao'.split('_')
+        cohorts = 'Jiang_GZ_FZ_Gao_SH'.split('_')
     elif args.test_cohort == 'GZ':
-        cohorts = 'Jiang_SH_FZ_GZ_Gao'.split('_')
+        cohorts = 'Jiang_SH_FZ_Gao_GZ'.split('_')
     elif args.test_cohort == 'FZ':
+        cohorts = 'Jiang_SH_GZ_Gao_FZ'.split('_')
+    elif args.test_cohort == 'Gao':
         cohorts = 'Jiang_SH_GZ_FZ_Gao'.split('_')
-    train_valid_test_groups = {
-        'train':
-        [
-            '{:}_train'.format(cohorts[0]),
-            '{:}_train_low-risk'.format(cohorts[1]), 
-            '{:}_train_low-risk'.format(cohorts[2]),
-            '{:}_train_high-risk'.format(cohorts[1]), 
-            '{:}_train_high-risk'.format(cohorts[2]),
-            '{:}_train'.format(cohorts[4])
-        ],
-
-        # validation sets
-        'valid':
-        [
-            '{:}_{:}_{:}_{:}_valid'.format(cohorts[0], cohorts[1], cohorts[2], cohorts[4])
-        ],
-
-
-        # test sets
-        'test':
-        [
-            '{:}'.format(cohorts[3]),
-            '{:}_0A'.format(cohorts[3]),
-            '{:}_low-risk'.format(cohorts[3]),
-            '{:}_B'.format(cohorts[3]), 
-        ]
-    }
+    if args.test_cohort == 'Gao':
+        train_valid_test_groups = {
+            'train':
+            [
+                '{:}_train'.format(cohorts[0]),
+                '{:}_train'.format(cohorts[1]), 
+                '{:}_train'.format(cohorts[2]),
+                '{:}_train'.format(cohorts[3]),
+            ],
+            # validation sets
+            'valid':
+            [
+                '{:}_{:}_{:}_{:}_valid'.format(cohorts[0], cohorts[1], cohorts[2], cohorts[3])
+            ],
+            # test sets
+            'test':
+            [
+                '{:}'.format(cohorts[4]),
+            ]
+        }  
+    else:
+        train_valid_test_groups = {
+            'train':
+            [
+                '{:}_train'.format(cohorts[0]),
+                '{:}_train_low-risk'.format(cohorts[1]), 
+                '{:}_train_low-risk'.format(cohorts[2]),
+                '{:}_train_high-risk'.format(cohorts[1]), 
+                '{:}_train_high-risk'.format(cohorts[2]),
+                '{:}_train'.format(cohorts[3])
+            ],
+            # validation sets
+            'valid':
+            [
+                '{:}_{:}_{:}_{:}_valid'.format(cohorts[0], cohorts[1], cohorts[2], cohorts[3])
+            ],
+            # test sets
+            'test':
+            [
+                '{:}'.format(cohorts[4]),
+                '{:}_0A'.format(cohorts[4]),
+                '{:}_low-risk'.format(cohorts[4]),
+                '{:}_B'.format(cohorts[4]), 
+            ]
+        }
     datasets_train, datasets_valid, datasets_test = datasets_regroup(datasets, train_valid_test_groups)
 
     if not args.evaluate:
@@ -409,4 +490,5 @@ if __name__ == '__main__':
             real_xtype(datasets, datasets_train, datasets_valid, datasets_test)
             tf.keras.backend.clear_session()
     else:
+        external_validation(datasets)
         evaluation(args.km_viz)
