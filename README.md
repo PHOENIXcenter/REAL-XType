@@ -1,16 +1,28 @@
 # REAL-XType
 
-This is the python and tensorflow implementation of the subtyping algorithm 'REAL-XType' proposed in the paper 'REAL: The Principle and Approach for Clinical Multicenter Proteomic Tumor Analysis'.
+This repository contains the Python and TensorFlow implementation of the subtyping algorithm **REAL-XType**, as proposed in the paper *"REAL principle unveils metabolic vulnerabilities and robust prognostic stratification in hepatocellular carcinoma"*.
 
-Here are the instructions:
+## Instructions
 
-1. Create an anaconda environment with anaconda installed on you desktop/server, note that we recommand to test on a windows system for the best reproducibility.
+### 1. Set Up the Anaconda Environment
 
-conda env create -f code/real_env.yml
+To ensure reproducibility, we recommend testing on a Windows system. Follow these steps to create the Anaconda environment:
+
+1. Install Anaconda on your desktop/server if you haven't already.
+2. Create the environment using the provided `real_env.yml` file:
+
+   ```bash
+   conda env create -f code/real_env.yml
+   ```
+
+### 2. Reproduce Benchmarking Results and Application Experiments
+
+   ```bash
+   conda activate real_env
+   code/bash cmd.bat
+   ```
 
 
-2. To reproduce our benchmarking results and the application experiment which transfers the original subtypes from Jiang et al.'s cohort to SH, GZ, FZ and Gao et al.'s cohorts, you need to activate the conda environment and run following batch commands
-
-conda activate real_env
-
-code/bash cmd.bat
+## Contact
+For questions, issues, or suggestions, please open an issue on the GitHub repository or contact the maintainers directly:
+Linhai Xie: xielinhai@gmail.com
