@@ -9,13 +9,13 @@ This repository contains the Python and TensorFlow implementation of the subtypi
 To ensure reproducibility, we recommend testing on a Windows system. Follow these steps to create the Anaconda environment:
 
 1. Install Anaconda on your desktop/server if you haven't already.
-2. Create the environment using the provided `real_env.yml` file:
+2. Create the environment using the provided `real_env.yml` file. It may take from a few minutes to an hour, which depends on your network.
 
    ```bash
    conda env create -f code/real_env.yml
    ```
 
-### 2. Reproduce Benchmarking Results and Application Experiments
+### 2. Reproduce Benchmarking Results and Application Experiments.
 
    ```bash
    conda activate real_env
@@ -24,7 +24,7 @@ To ensure reproducibility, we recommend testing on a Windows system. Follow thes
 
 ### 3. Expected output
 In the generated "data\benchmark" folder, you are expected to see all saved models with different hyperparameters, their best models and two images showing the benchmarking results.
-In the generated "data\application" folder, you are expected to see survival curves on all test datasets.
+In the generated "data\application" folder, you are expected to find survival curves on all test datasets in the subfolders.
 
 Although it usually trains a single model within 1 min, the whole process will take several hours by grid-searching for all possible hyperparameters and benchmarking all algorithms.
 
