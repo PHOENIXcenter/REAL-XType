@@ -26,6 +26,8 @@ To ensure reproducibility, we recommend testing on a Windows system. Follow thes
 In the generated "data\benchmark" folder, you are expected to see all saved models with different hyperparameters, their best models and two images showing the benchmarking results.
 In the generated "data\application" folder, you are expected to see survival curves on all test datasets.
 
+Although it usually trains a single model within 1 min, the whole process will take several hours by grid-searching for all possible hyperparameters and benchmarking all algorithms.
+
 ## Contact
 For questions, issues, or suggestions, please open an issue on the GitHub repository or contact the maintainers directly:
 Linhai Xie: xielinhai@gmail.com
