@@ -1,6 +1,6 @@
 # REAL-XType
 
-This repository contains the Python and TensorFlow implementation of the subtyping algorithm **REAL-XType**, as proposed in the paper *"REAL principle unveils metabolic vulnerabilities and robust prognostic stratification in hepatocellular carcinoma"*.
+This repository contains the Python and TensorFlow implementation of the subtyping algorithm **REAL-XType**, as proposed in the manuscript *"REAL principle unveils metabolic vulnerabilities and robust prognostic stratification in hepatocellular carcinoma"*.
 
 ## Instructions
 
