@@ -189,7 +189,7 @@ def sklearn_classifier(train_df, all_df):
 
 def evaluation():
     results_df = []
-    methods = ['LogisticRegression', 'RandomForest', 'XGBoost', 'DNN', 'XTypeNoCox', 'XTypeNoCDAN', 'XType']
+    methods = ['LogisticRegression', 'RandomForest', 'XGBoost', 'DNN', 'XType']
     metrics_methods_seeds = []
     metrics_methods_pval = np.zeros((5, 5, len(methods) - 1))
 

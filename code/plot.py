@@ -7,7 +7,7 @@ import scipy.stats as stats
 color_scheme = ['#b7b8b8', '#c6c48d', '#dadbeb', '#b4a8dc', '#edc39a', '#d89d9d', '#64afaf']
 
 def barplot_benchmark(data_path, plot_metric='C-Index', ymin=0., ymax=1., file_type='.png'):
-    data = pd.read_csv(join(data_path, 'best_vals_baseline_only.csv'))
+    data = pd.read_csv(join(data_path, 'best_vals.csv'))
     custom_x_labels = [
         "Extension set\nOS", "Extension set\nrecurrence", "Validation set\nOS", "Validation set\nrecurrence",
         "Internal test\nset OS", "Internal test\nset recurrence", "External test\nset OS", "External test\nset recurrence",
@@ -127,4 +127,4 @@ def barplot_benchmark(data_path, plot_metric='C-Index', ymin=0., ymax=1., file_t
 
 if __name__ == '__main__':
     barplot_benchmark(r'data\benchmark', plot_metric='C-Index', ymin=0.5, ymax=0.75, file_type='.pdf')
-    barplot_benchmark(r'\data\benchmark', plot_metric='Log-rank score', ymin=0., ymax=9., file_type='.pdf')
+    barplot_benchmark(r'data\benchmark', plot_metric='Log-rank score', ymin=0., ymax=9., file_type='.pdf')

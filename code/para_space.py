@@ -5,48 +5,58 @@ import collections
 from os.path import join
 
 def get_paras(args, experiment_path):
+    # Here we directly provide the best hyperparameter for a quick reproduction.
+    # The full search of all hyperparameters can take more than 10 hours.
     if args.method == 'XType':
+        # para_dicts = collections.OrderedDict(
+        #     dropout = [0.6, 0.8],
+        #     loss_var = [0.01, 0.05, 0.1],
+        #     loss_da = [0.1, 0.3, 0.5],
+        #     regu = [1e-4, 1e-3, 2e-3],
+        # )
         para_dicts = collections.OrderedDict(
-            dropout = [0.6, 0.8],
-            loss_var = [0.01, 0.05, 0.1],
-            loss_da = [0.1, 0.3, 0.5],
-            regu = [1e-4, 1e-3, 2e-3],
-        )
-    elif args.method == 'XTypeNoCDAN':
-        para_dicts = collections.OrderedDict(
-            dropout = [0.4, 0.6, 0.8],
-            loss_var = [0.],
-            loss_da = [0.],
-            regu = [1e-4, 1e-3, 2e-3],
-        )
-    elif args.method == 'XTypeNoCox':
-        para_dicts = collections.OrderedDict(
-            dropout = [0.6, 0.8],
-            loss_var = [0.01, 0.05, 0.1],
+            dropout = [0.6],
+            loss_var = [0.01],
             loss_da = [0.1],
-            regu = [1e-4, 1e-3, 2e-3],
-            loss_nll = [0.],
+            regu = [1e-4],
         )
     elif args.method == 'DNN':
+        # para_dicts = collections.OrderedDict(
+        #     loss_nll = [0.], 
+        #     loss_da = [0.],
+        #     loss_var = [0.],
+        #     dropout = [0.2, 0.4]
+        # )
         para_dicts = collections.OrderedDict(
             loss_nll = [0.], 
             loss_da = [0.],
             loss_var = [0.],
-            dropout = [0.2, 0.4]
+            dropout = [0.2]
         )
     elif args.method == 'RandomForest':
+        # para_dicts = collections.OrderedDict(
+        #     n_estimators=[10, 50, 100],
+        #     max_depth=[None, 10, 20]
+        # )
         para_dicts = collections.OrderedDict(
-            n_estimators=[10, 50, 100],
-            max_depth=[None, 10, 20]
+            n_estimators=[50],
+            max_depth=[None]
         )
     elif args.method == 'LogisticRegression':
+        # para_dicts = collections.OrderedDict(
+        #     alpha = [0.1, 0.3, 0.6, 0.9]
+        # )
         para_dicts = collections.OrderedDict(
-            alpha = [0.1, 0.3, 0.6, 0.9]
+            alpha = [0.6]
         )
     elif args.method == 'XGBoost':
+        # para_dicts = collections.OrderedDict(
+        #     n_estimators=[10, 50, 100],
+        #     max_depth=[6, 10, 20] 
+        # )
         para_dicts = collections.OrderedDict(
-            n_estimators=[10, 50, 100],
-            max_depth=[6, 10, 20] 
+            n_estimators=[10],
+            max_depth=[6] 
         )
     
     para_names = list(para_dicts.keys())
