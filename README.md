@@ -31,7 +31,7 @@ The whole process will take several hours by grid-searching for all hyperparamet
 `python code\benchmark.py --method %%i --para_id %%j --valid_fold %%k  --seed %%l`
 
 It trains a model of `method` i with its hyperparameter set j, which is defined in `para_space.py`.
-The `valid_fold` 0-4 indicates a regular training process of 5-fold cross validation and the `valid_fild` 5 means training the model using all data.
+The `valid_fold` 0-4 indicates a regular training process of 5-fold cross validation and the `valid_fold` 5 means training the model using all data.
 We repeat the training of each method with 5 different random seeds.
 After all iterations of this command, you will see the folder of each method in the `data\benchmark` folder, containing their model weights and subtyping results of all samples.
 
