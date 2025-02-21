@@ -17,8 +17,8 @@ def get_paras(args, experiment_path):
         para_dicts = collections.OrderedDict(
             dropout = [0.6],
             loss_var = [0.01],
-            loss_da = [0.1],
-            regu = [1e-4],
+            loss_da = [0.3],
+            regu = [2e-3],
         )
     elif args.method == 'DNN':
         # para_dicts = collections.OrderedDict(
