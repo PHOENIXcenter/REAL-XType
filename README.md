@@ -18,13 +18,15 @@ To ensure the best reproducibility, we recommend testing on a Windows 11 desktop
 ### 2. Reproduce Benchmarking Results and Application Experiments. 
 
 The proteomic data after preprocessing and survival information are providede in the data folder.
-Here we simpy provide the best parameter of each model for a quick reproduction, which may take an hour. 
-The whole process will take several hours by grid-searching for all hyperparameters of all algorithms with different random seeds.
+
+Since the whole process will take several hours by grid-searching for all hyperparameters of all algorithms with different random seeds, here we simply provide the best parameter of each model for a quick reproduction, which may take an hour. 
 
    ```bash
    conda activate real_env
    code\cmd.bat
    ```
+
+You can try the full searching process by changing the commented part in `para_space.py` and adjust the iteration range of `%%j ` in `cmd.bat`.
 
 ### 3.Functionanility of each command in the BAT script
 
