@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from numba import jit
 from os.path import join
-from lifelines import statistics
+from lifelines import KaplanMeierFitter, statistics
+from lifelines.utils import restricted_mean_survival_time
 from scipy import stats
 
 def get_km_curve(times, events, clip_time=60):
@@ -64,6 +65,7 @@ def get_rmst_custom(times, events, clip_time=60):
     return RMST
 
 def get_rmst(time, event, label):
+    """Return the area under the fitted Kaplan-Meier curve up to 60 months."""
     kmf = KaplanMeierFitter().fit(time, event, label=label)
     return restricted_mean_survival_time(kmf, t=60)
 
